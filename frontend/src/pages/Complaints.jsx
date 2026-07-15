@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import DataTable from '../components/DataTable.jsx';
 import StatusBadge from '../components/StatusBadge.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -14,6 +15,16 @@ export default function Complaints() {
     api.get(user.role === 'ADMIN' ? `/complaints?${params}` : '/complaints/mine').then((res) => setRows(res.data.content || []));
   };
   useEffect(load, [user.role]);
+  const deleteComplaint = async (row) => {
+    if (!window.confirm(`Delete complaint #${row.id}?`)) return;
+    try {
+      await api.delete(`/complaints/${row.id}`);
+      toast.success('Complaint deleted');
+      load();
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
@@ -30,6 +41,7 @@ export default function Complaints() {
         { key: 'status', label: 'Status', render: (r) => <StatusBadge value={r.status} /> },
         { key: 'priority', label: 'Priority', render: (r) => <StatusBadge value={r.priority} /> },
         { key: 'overdue', label: 'Overdue', render: (r) => r.overdue ? 'Yes' : 'No' },
+        ...(user.role !== 'ADMIN' ? [{ key: 'actions', label: 'Actions', render: (r) => <button className="btn-secondary text-red-600" onClick={() => deleteComplaint(r)}>Delete</button> }] : []),
       ]} rows={rows} />
     </div>
   );

@@ -56,4 +56,10 @@ public class ComplaintController {
                                                         @AuthenticationPrincipal User admin) {
         return ApiResponse.ok("Complaint updated", service.updateResponse(id, request, admin));
     }
+
+    @DeleteMapping("/{id}")
+    ApiResponse<Void> delete(@PathVariable Long id, @AuthenticationPrincipal User user) {
+        service.delete(id, user);
+        return ApiResponse.ok("Complaint deleted", null);
+    }
 }

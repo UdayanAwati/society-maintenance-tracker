@@ -125,6 +125,15 @@ public class ComplaintService {
         return AppMapper.complaint(complaint);
     }
 
+    @Transactional
+    public void delete(Long id, User user) {
+        var complaint = get(id);
+        if (user.getRole() == Role.RESIDENT && !complaint.getResident().getId().equals(user.getId())) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Access denied");
+        }
+        complaints.delete(complaint);
+    }
+
     @Scheduled(cron = "0 0 * * * *")
     @Transactional
     public void markOverdue() {

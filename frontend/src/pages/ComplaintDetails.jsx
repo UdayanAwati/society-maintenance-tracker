@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import StatusBadge from '../components/StatusBadge.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -8,6 +8,7 @@ import { api } from '../services/api.js';
 
 export default function ComplaintDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [complaint, setComplaint] = useState(null);
   const [imageFailed, setImageFailed] = useState(false);
@@ -35,12 +36,23 @@ export default function ComplaintDetails() {
     try { await api.patch(`/complaints/${id}`, { ...form, closeComplaint: true, note: form.note || 'Complaint closed' }); toast.success('Complaint closed'); load(); }
     catch (error) { toast.error(error.message); }
   };
+  const deleteComplaint = async () => {
+    if (!window.confirm(`Delete complaint #${id}?`)) return;
+    try {
+      await api.delete(`/complaints/${id}`);
+      toast.success('Complaint deleted');
+      navigate('/complaints');
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
   if (!complaint) return <div className="panel">Loading...</div>;
   const photoUrl = assetUrl(complaint.photoUrl);
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
       <section className="panel space-y-4">
         <div className="flex flex-wrap items-center gap-3"><h2 className="text-xl font-semibold">Complaint #{complaint.id}</h2><StatusBadge value={complaint.status} /><StatusBadge value={complaint.priority} />{complaint.overdue && <span className="badge bg-red-100 text-red-700">Overdue</span>}</div>
+        {user.role !== 'ADMIN' && <button className="btn-secondary w-fit text-red-600" onClick={deleteComplaint}>Delete Complaint</button>}
         <div className="text-sm text-slate-500">
           <p>{complaint.category} by {complaint.resident.name}</p>
           <p>Flat: {complaint.resident.flatNumber || 'Not added'}</p>
