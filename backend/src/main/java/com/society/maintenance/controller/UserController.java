@@ -35,7 +35,15 @@ public class UserController {
     @PatchMapping("/me")
     ApiResponse<AuthDtos.UserResponse> updateMe(@AuthenticationPrincipal User user,
                                                 @Valid @RequestBody AuthDtos.UpdateProfileRequest request) {
+        users.findByEmail(request.email().toLowerCase())
+                .filter(existing -> !existing.getId().equals(user.getId()))
+                .ifPresent(existing -> {
+                    throw new com.society.maintenance.exception.ApiException(org.springframework.http.HttpStatus.CONFLICT, "Email already registered");
+                });
+        user.setName(request.name());
+        user.setEmail(request.email().toLowerCase());
         user.setPhone(request.phone());
+        user.setFlatNumber(request.flatNumber());
         users.save(user);
         return ApiResponse.ok("Profile updated", AppMapper.user(user));
     }

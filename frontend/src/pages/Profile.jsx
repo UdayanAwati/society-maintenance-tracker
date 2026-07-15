@@ -5,14 +5,17 @@ import { api } from '../services/api.js';
 
 export default function Profile() {
   const { user, setUser, logout } = useAuth();
+  const [name, setName] = useState(user.name || '');
+  const [email, setEmail] = useState(user.email || '');
   const [phone, setPhone] = useState(user.phone || '');
+  const [flatNumber, setFlatNumber] = useState(user.flatNumber || '');
   const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '' });
   const apiRoot = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:8080';
   const photo = user.profilePhotoUrl?.startsWith('/uploads') ? `${apiRoot}${user.profilePhotoUrl}` : user.profilePhotoUrl;
 
-  const savePhone = async () => {
+  const saveProfile = async () => {
     try {
-      const res = await api.patch('/users/me', { phone });
+      const res = await api.patch('/users/me', { name, email, phone, flatNumber });
       setUser(res.data);
       toast.success('Profile updated');
     } catch (error) {
@@ -56,12 +59,12 @@ export default function Profile() {
           </div>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="text-sm">Name<input className="input mt-1" value={user.name} disabled /></label>
-          <label className="text-sm">Email<input className="input mt-1" value={user.email} disabled /></label>
-          <label className="text-sm">Flat Number<input className="input mt-1" value={user.flatNumber || ''} disabled /></label>
+          <label className="text-sm">Name<input className="input mt-1" value={name} onChange={(e) => setName(e.target.value)} /></label>
+          <label className="text-sm">Email<input className="input mt-1" type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
+          <label className="text-sm">Flat Number<input className="input mt-1" value={flatNumber} onChange={(e) => setFlatNumber(e.target.value)} /></label>
           <label className="text-sm">Phone Number<input className="input mt-1" value={phone} onChange={(e) => setPhone(e.target.value)} /></label>
         </div>
-        <button className="btn-primary" onClick={savePhone}>Save Profile</button>
+        <button className="btn-primary" onClick={saveProfile}>Save Profile</button>
       </section>
       <aside className="space-y-6">
         <section className="panel space-y-4">
