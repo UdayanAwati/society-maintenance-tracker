@@ -3,14 +3,19 @@ import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import StatusBadge from '../components/StatusBadge.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
+import { assetUrl } from '../services/assets.js';
 import { api } from '../services/api.js';
 
 export default function ComplaintDetails() {
   const { id } = useParams();
   const { user } = useAuth();
   const [complaint, setComplaint] = useState(null);
+  const [imageFailed, setImageFailed] = useState(false);
   const [form, setForm] = useState({ status: '', priority: '', note: '', assignedTechnician: '', overdue: false });
-  const load = () => api.get(`/complaints/${id}`).then((res) => setComplaint(res.data));
+  const load = () => api.get(`/complaints/${id}`).then((res) => {
+    setComplaint(res.data);
+    setImageFailed(false);
+  });
   useEffect(() => { load(); }, [id]);
   useEffect(() => {
     if (!complaint) return;
@@ -31,8 +36,7 @@ export default function ComplaintDetails() {
     catch (error) { toast.error(error.message); }
   };
   if (!complaint) return <div className="panel">Loading...</div>;
-  const apiRoot = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:8080';
-  const photoUrl = complaint.photoUrl?.startsWith('/uploads') ? `${apiRoot}${complaint.photoUrl}` : complaint.photoUrl;
+  const photoUrl = assetUrl(complaint.photoUrl);
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
       <section className="panel space-y-4">
@@ -43,7 +47,12 @@ export default function ComplaintDetails() {
           {complaint.assignedTechnician && <p>Technician: {complaint.assignedTechnician}</p>}
         </div>
         <p>{complaint.description}</p>
-        {photoUrl && <img className="max-h-96 rounded-md border object-contain" src={photoUrl} alt="Complaint" />}
+        {photoUrl && !imageFailed && <img className="max-h-96 rounded-md border object-contain" src={photoUrl} alt="Complaint" onError={() => setImageFailed(true)} />}
+        {photoUrl && imageFailed && (
+          <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+            Image could not be loaded. <a className="font-semibold underline" href={photoUrl} target="_blank" rel="noreferrer">Open image</a>
+          </div>
+        )}
         <h3 className="font-semibold">Timeline</h3>
         <ol className="space-y-3">
           {complaint.history.map((item) => <li key={item.id} className="rounded-md border p-3 dark:border-slate-800"><StatusBadge value={item.status} /><p className="mt-2 text-sm">{item.note}</p><p className="text-xs text-slate-500">{item.updatedBy} • {new Date(item.timestamp).toLocaleString()}</p></li>)}

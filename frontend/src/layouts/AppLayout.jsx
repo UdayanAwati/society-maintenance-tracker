@@ -3,6 +3,7 @@ import { BarChart3, ClipboardList, Home, LogOut, Megaphone, Moon, PlusCircle, Su
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import NotificationBell from '../components/NotificationBell.jsx';
+import { assetUrl } from '../services/assets.js';
 
 const linkClass = ({ isActive }) => `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium ${isActive ? 'bg-blue-50 text-brand dark:bg-slate-800' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'}`;
 
@@ -11,8 +12,7 @@ export default function AppLayout() {
   const [profileOpen, setProfileOpen] = useState(false);
   const navigate = useNavigate();
   const isAdmin = user?.role === 'ADMIN';
-  const apiRoot = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:8080';
-  const photo = user?.profilePhotoUrl?.startsWith('/uploads') ? `${apiRoot}${user.profilePhotoUrl}` : user?.profilePhotoUrl;
+  const photo = assetUrl(user?.profilePhotoUrl);
   return (
     <div className="app-shell min-h-screen lg:grid lg:grid-cols-[260px_1fr]">
       <aside className="border-r border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">

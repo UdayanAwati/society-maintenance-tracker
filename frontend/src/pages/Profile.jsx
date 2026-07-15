@@ -1,6 +1,7 @@
 import { useAuth } from '../context/AuthContext.jsx';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
+import { assetUrl } from '../services/assets.js';
 import { api } from '../services/api.js';
 
 export default function Profile() {
@@ -10,8 +11,7 @@ export default function Profile() {
   const [phone, setPhone] = useState(user.phone || '');
   const [flatNumber, setFlatNumber] = useState(user.flatNumber || '');
   const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '' });
-  const apiRoot = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:8080';
-  const photo = user.profilePhotoUrl?.startsWith('/uploads') ? `${apiRoot}${user.profilePhotoUrl}` : user.profilePhotoUrl;
+  const photo = assetUrl(user.profilePhotoUrl);
 
   const saveProfile = async () => {
     try {

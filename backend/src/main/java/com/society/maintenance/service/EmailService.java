@@ -8,6 +8,8 @@ import com.society.maintenance.entity.User;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class EmailService {
+    private static final Logger log = LoggerFactory.getLogger(EmailService.class);
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a")
             .withZone(ZoneId.systemDefault());
 
@@ -34,6 +37,7 @@ public class EmailService {
 
     public void send(User user, String subject, String html) {
         if (!enabled || from == null || from.isBlank()) {
+            log.info("Email skipped. MAIL_ENABLED={}, MAIL_USERNAME configured={}", enabled, from != null && !from.isBlank());
             return;
         }
         try {
@@ -44,7 +48,9 @@ public class EmailService {
             helper.setSubject(subject);
             helper.setText(html, true);
             mailSender.send(message);
-        } catch (Exception ignored) {
+            log.info("Email sent to {} with subject '{}'", user.getEmail(), subject);
+        } catch (Exception ex) {
+            log.warn("Email failed for {} with subject '{}': {}", user.getEmail(), subject, ex.getMessage());
             // Email failure must not break core complaint workflows.
         }
     }
